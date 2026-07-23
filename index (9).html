@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internal CDD Pools — QA Interview Scorecards</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236d28d9'/%3E%3Cpath d='M30 38h40M30 52h40M30 66h26' stroke='%23fff' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236d28d9'/%3E%3Cpath d='M30 38h40M30 52h40M30 66h26' stroke='%23fff' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<style>
+  :root{
+    --bg:#f6f4fa; --card:#ffffff; --border:#e0dce8; --text:#17151c; --text2:#6b6577; --text3:#a49dae;
+    --accent:#6d28d9; --accent-hover:#5b21b6; --accent-light:#ede9fe; --accent-mid:#c4b5fd;
+    --green:#16a34a; --green-light:#e6f7ec; --amber:#d97706; --amber-light:#fef3e2;
+    --red:#dc2626; --red-light:#fde8e8; --blue:#2563eb; --blue-light:#e0ecfd;
+    --shadow:0 1px 3px rgba(23,21,28,.06),0 8px 24px rgba(23,21,28,.06);
+  }
+  [data-theme="dark"]{
+    --bg:#0e0b14; --card:#1a1523; --border:#332b42; --text:#f2eff7; --text2:#a49dae; --text3:#6b6577;
+    --accent:#a78bfa; --accent-hover:#8b5cf6; --accent-light:#2a2140; --accent-mid:#5b4a8a;
+    --green:#34d27a; --green-light:#15301f; --amber:#f5a623; --amber-light:#3a2c10;
+    --red:#f87171; --red-light:#3a1515; --blue:#60a5fa; --blue-light:#152540;
+    --shadow:0 1px 3px rgba(0,0,0,.35),0 8px 28px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box; font-family:"Segoe UI",-apple-system,Roboto,Arial,sans-serif;}
+  html{color-scheme:light;}
+  html[data-theme="dark"]{color-scheme:dark;}
+  body{margin:0; background:var(--bg); color:var(--text); transition:background-color .2s,color .2s;}
+  input::placeholder, textarea::placeholder{color:var(--text3);}
+  select{color-scheme:inherit;}
+  .app{display:flex; min-height:100vh;}
+
+  /* Login gate */
+  #loginGate{position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; padding:20px;
+    background:radial-gradient(circle at 30% 15%, #efe7ff, #f6f4fa 62%);}
+  html[data-theme="dark"] #loginGate{background:radial-gradient(circle at 30% 15%, #241b3d, #0e0b14 62%);}
+  .login-card{background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); width:100%; max-width:384px; padding:34px 30px 30px;}
+  .login-card .thoth-logo{justify-content:center; margin-bottom:16px;}
+  .thoth-img{display:block; max-width:100%;}
+  .login-card .thoth-img{height:54px; width:auto;}
+  .login-title{font-size:15px; font-weight:600; text-align:center; margin:0 0 3px;}
+  .login-sub{font-size:12px; color:var(--text2); text-align:center; margin:0 0 22px;}
+  .login-card .field{margin-bottom:14px;}
+  .login-card .btn-primary{width:100%; justify-content:center; margin-top:8px; padding:11px;}
+  .btn-google{width:100%; justify-content:center; gap:10px; padding:11px; margin-top:4px; background:var(--card); color:var(--text); border:1px solid var(--border); font-weight:600;}
+  .btn-google:hover{background:var(--bg);}
+  .lg-error{display:none; color:var(--red); font-size:12px; margin:12px 0 0; text-align:center;}
+
+  /* THOTH brand mark */
+  .thoth-logo{display:flex; align-items:center; gap:11px;}
+  .thoth-logo svg{height:42px; width:auto; display:block; flex-shrink:0;}
+  .thoth-word{font-size:24px; font-weight:800; letter-spacing:1.5px;
+    background:linear-gradient(90deg,#ec1e9c 0%,#a855f7 50%,#4aa3f0 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;}
+  .login-card .thoth-word{font-size:30px;}
+
+  /* Signed-in user box */
+  .user-box{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text2); margin-bottom:10px;}
+  .user-box #userEmail{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .logout-btn{background:none; border:none; color:var(--text3); cursor:pointer; font-size:15px; padding:2px; line-height:1;}
+  .logout-btn:hover{color:var(--red);}
+
+  /* Sidebar */
+  .sidebar{width:225px; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; position:sticky; top:0; height:100vh;}
+  .logo{display:flex; align-items:center; gap:10px; padding:20px 18px; font-weight:700; font-size:16px; letter-spacing:.3px; line-height:1.2;}
+  .brand-mark{width:26px; height:26px; flex-shrink:0; display:block;}
+  .nav{display:flex; flex-direction:column; gap:2px; padding:0 10px;}
+  .nav-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; color:var(--text2); font-size:14px; cursor:pointer; text-decoration:none; user-select:none;}
+  .nav-item i{font-size:18px;}
+  .nav-item.active{background:var(--accent-light); color:var(--accent); font-weight:600;}
+  .nav-item:hover:not(.active){background:var(--bg);}
+  .nav-sep{height:1px; background:var(--border); margin:8px 12px;}
+  .sidebar-footer{margin-top:auto; padding:14px 18px; border-top:1px solid var(--border);}
+  .sync-row{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2);}
+  .sync-dot{width:8px; height:8px; border-radius:50%; background:var(--text3); flex-shrink:0;}
+  .sync-dot.on{background:var(--green); box-shadow:0 0 6px var(--green);}
+  .sync-dot.off{background:var(--amber);}
+
+  /* Main */
+  .main{flex:1; padding:24px 28px; min-width:0;}
+  .header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;}
+  .header h1{font-size:22px; margin:0 0 4px;}
+  .header p{margin:0; color:var(--text2); font-size:13px;}
+  .header-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .btn{display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card); font-size:13px; color:var(--text); cursor:pointer; white-space:nowrap;}
+  .btn:hover{background:var(--bg);}
+  .btn-primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .btn-primary:hover{background:var(--accent-hover);}
+  .btn-sm{padding:5px 10px; font-size:12px;}
+
+  /* Stats */
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+  .stat-card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; align-items:center; gap:12px;}
+  .stat-icon{width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;}
+  .stat-value{font-size:20px; font-weight:600; line-height:1.2;}
+  .stat-label{font-size:12px; color:var(--text2);}
+
+  /* Filters */
+  .filters{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+  .search-box{flex:1; min-width:220px; position:relative;}
+  .search-box i{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text3); font-size:16px;}
+  .search-box input{width:100%; padding:9px 12px 9px 36px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text);}
+  select, .filters input{padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text); cursor:pointer;}
+
+  /* Candidate list */
+  .list{border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--card);}
+  .list-header{display:grid; grid-template-columns:34px 1fr 150px 120px 80px 100px 150px; gap:12px; padding:10px 16px; background:var(--bg); border-bottom:1px solid var(--border);}
+  .list-header span{font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.06em;}
+  .cand-row{display:grid; grid-template-columns:34px 1fr 150px 120px 80px 100px 150px; gap:12px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s;}
+  .cand-row:last-child{border-bottom:none;}
+  .cand-row:hover{background:var(--bg);}
+  .cand-num{font-size:12px; color:var(--text3); text-align:center; font-variant-numeric:tabular-nums;}
+  .cand-name{font-size:13px; font-weight:500;}
+  .cand-sub{font-size:11px; color:var(--text3); margin-top:1px;}
+  .cell{font-size:12px; color:var(--text2);}
+  .c{text-align:center;}
+
+  .score-pill{display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .score-hi{background:var(--green-light); color:var(--green);}
+  .score-mid{background:var(--accent-light); color:var(--accent);}
+  .score-kiv{background:var(--amber-light); color:var(--amber);}
+  .score-lo{background:var(--red-light); color:var(--red);}
+  .score-na{background:var(--bg); color:var(--text3); font-weight:500;}
+
+  .badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; white-space:nowrap;}
+  .st-applied{background:var(--bg); color:var(--text2); border:1px solid var(--border);}
+  .st-screening{background:var(--blue-light); color:var(--blue);}
+  .st-interview{background:var(--accent-light); color:var(--accent);}
+  .st-kiv{background:var(--amber-light); color:var(--amber);}
+  .st-offer{background:var(--green-light); color:var(--green);}
+  .st-hired{background:var(--green); color:#fff;}
+  .st-rejected{background:var(--red-light); color:var(--red);}
+
+  .verdict{display:inline-block; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; white-space:nowrap;}
+  .v-fee{background:var(--green); color:#fff;}
+  .v-ee{background:var(--green-light); color:var(--green);}
+  .v-me{background:var(--accent-light); color:var(--accent);}
+  .v-kiv{background:var(--amber-light); color:var(--amber);}
+  .v-be{background:var(--red-light); color:var(--red);}
+  .v-fbe{background:var(--red); color:#fff;}
+
+  .empty{padding:48px 16px; text-align:center; color:var(--text3); font-size:13px;}
+  .empty i{font-size:34px; display:block; margin-bottom:10px; color:var(--border);}
+
+  /* Modal */
+  .modal-overlay{position:fixed; inset:0; background:rgba(14,11,20,.55); display:none; align-items:flex-start; justify-content:center; z-index:100; padding:28px 16px; overflow-y:auto;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--card); border-radius:14px; width:100%; max-width:640px; box-shadow:var(--shadow); border:1px solid var(--border);}
+  .modal-box.wide{max-width:860px;}
+  .modal-head{display:flex; justify-content:space-between; align-items:center; padding:16px 22px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--card); border-radius:14px 14px 0 0; z-index:5;}
+  .modal-head h2{font-size:17px; margin:0;}
+  .modal-head .sub{font-size:12px; color:var(--text3); margin-top:2px;}
+  .modal-close{background:none; border:none; font-size:22px; color:var(--text3); cursor:pointer; line-height:1;}
+  .modal-body{padding:22px;}
+  .modal-foot{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px 22px; border-top:1px solid var(--border); position:sticky; bottom:0; background:var(--card); border-radius:0 0 14px 14px;}
+  .timer-chip{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-light); border-radius:20px; padding:4px 12px; font-variant-numeric:tabular-nums;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; font-weight:500; color:var(--text2); margin-bottom:6px;}
+  .field input, .field select, .field textarea{width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text);}
+  .field textarea{resize:vertical; min-height:70px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+
+  /* Scorecard sections */
+  .group-head{display:flex; align-items:center; justify-content:space-between; margin:22px 0 6px; padding:10px 14px; background:var(--accent-light); border-radius:10px;}
+  .group-head:first-of-type{margin-top:4px;}
+  .group-title{font-size:14px; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:8px;}
+  .group-time{font-size:11px; font-weight:600; color:var(--accent); opacity:.75;}
+  .item-row{padding:12px 4px; border-bottom:1px solid var(--border);}
+  .item-top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .item-name{font-size:13px; font-weight:500;}
+  .item-hint{font-size:11px; color:var(--text3); margin-top:1px;}
+  .rating{display:flex; gap:5px; flex-wrap:wrap;}
+  .rating button{min-width:38px; height:32px; padding:0 6px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-variant-numeric:tabular-nums;}
+  .rating button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .rating button:hover:not(.sel){background:var(--accent-light); color:var(--accent);}
+  .q-toggle{background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer; padding:4px 0; display:inline-flex; align-items:center; gap:4px;}
+  .q-panel{display:none; margin-top:8px; padding:10px 12px; background:var(--bg); border-radius:8px;}
+  .q-panel.open{display:block;}
+  .q-item{display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--text2); padding:4px 0; cursor:pointer;}
+  .q-item input{margin-top:2px; accent-color:var(--accent);}
+  .q-item.asked{color:var(--text); }
+  .q-note{width:100%; margin-top:8px; padding:7px 10px; border:1px solid var(--border); border-radius:7px; font-size:12px; background:var(--card); color:var(--text);}
+  .scale-legend{font-size:11px; color:var(--text3); line-height:1.7; background:var(--bg); border-radius:10px; padding:10px 14px; margin-bottom:14px;}
+  .scale-legend b{color:var(--accent);}
+  .seg{display:flex; gap:6px;}
+  .seg button{padding:7px 14px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text2); font-size:12px; cursor:pointer;}
+  .seg button.sel-yes{background:var(--green); color:#fff; border-color:var(--green);}
+  .seg button.sel-no{background:var(--red); color:#fff; border-color:var(--red);}
+  .live-overall{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text2);}
+  .live-overall b{font-size:18px; color:var(--accent); font-variant-numeric:tabular-nums;}
+
+  /* Detail view */
+  .detail-top{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; flex-wrap:wrap;}
+  .detail-name{font-size:20px; font-weight:600;}
+  .detail-meta{font-size:13px; color:var(--text2); margin-top:4px;}
+  .detail-big-score{text-align:center; padding:0 8px;}
+  .detail-big-score .n{font-size:34px; font-weight:700; line-height:1;}
+  .detail-big-score .l{font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-top:4px;}
+  .two-col{display:grid; grid-template-columns:1.25fr 1fr; gap:16px; align-items:start;}
+  .panel{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px;}
+  .panel h3{font-size:14px; margin:0 0 14px;}
+  .crit-bar-row{margin-bottom:11px;}
+  .crit-bar-top{display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; gap:8px;}
+  .crit-bar-top .v{font-weight:600; font-variant-numeric:tabular-nums; flex-shrink:0;}
+  .crit-bar{height:7px; border-radius:5px; background:var(--bg); overflow:hidden;}
+  .crit-bar span{display:block; height:100%; border-radius:5px;}
+  .bar-group-label{font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; margin:16px 0 8px;}
+  .bar-group-label:first-of-type{margin-top:0;}
+
+  .sc-card{border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px;}
+  .sc-card:last-child{margin-bottom:0;}
+  .sc-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap;}
+  .sc-who{font-size:13px; font-weight:600;}
+  .sc-when{font-size:11px; color:var(--text3);}
+  .sc-scores{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0;}
+  .sc-chip{font-size:11px; color:var(--text2); background:var(--bg); border-radius:6px; padding:3px 8px;}
+  .sc-chip b{color:var(--text); font-variant-numeric:tabular-nums;}
+  .sc-comment{font-size:12px; color:var(--text2); line-height:1.5; margin-top:6px; white-space:pre-wrap;}
+  .proscons{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; margin-top:10px;}
+  .pc-box{border-radius:10px; padding:11px 13px; border:1px solid var(--border);}
+  .pc-pros{background:var(--green-light); border-color:color-mix(in srgb, var(--green) 25%, transparent);}
+  .pc-cons{background:var(--amber-light); border-color:color-mix(in srgb, var(--amber) 25%, transparent);}
+  .pc-head{font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:7px;}
+  .pc-pros .pc-head{color:var(--green);}
+  .pc-cons .pc-head{color:var(--amber);}
+  .pc-body{font-size:12px; color:var(--text); opacity:.85; line-height:1.55; white-space:pre-wrap;}
+  .sc-del{background:none; border:none; color:var(--text3); cursor:pointer; font-size:15px;}
+  .sc-del:hover{color:var(--red);}
+  .sc-details{margin-top:8px;}
+  .sc-details summary{font-size:11px; color:var(--accent); cursor:pointer;}
+  .sc-detail-row{font-size:11px; color:var(--text2); padding:3px 0; display:flex; justify-content:space-between; gap:8px;}
+  .sc-detail-row b{font-variant-numeric:tabular-nums;}
+  .sc-detail-note{font-size:11px; color:var(--text3); font-style:italic; padding-left:12px;}
+
+  .link-btn{background:none; border:none; color:var(--accent); font-size:13px; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:5px;}
+
+  /* Rubric / bank */
+  .bank-card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin-bottom:14px;}
+  .bank-card h3{margin:0 0 4px; font-size:15px; display:flex; align-items:center; gap:8px;}
+  .bank-card .bank-time{font-size:12px; color:var(--accent); font-weight:600;}
+  .bank-obj{font-size:12px; color:var(--text2); margin:6px 0 10px;}
+  .bank-item{margin:10px 0 4px; font-size:13px; font-weight:600;}
+  .bank-q{font-size:12px; color:var(--text2); padding:3px 0 3px 16px; position:relative;}
+  .bank-q::before{content:"•"; position:absolute; left:4px; color:var(--accent-mid);}
+
+  @media(max-width:900px){
+    .sidebar{width:62px;} .logo span, .nav-item span, .sync-row span{display:none;}
+    .nav-item{justify-content:center; padding:10px 0;} .nav-item i{font-size:20px;}
+    .sidebar-footer{display:flex; justify-content:center;}
+    .stats{grid-template-columns:repeat(2,1fr);} .two-col{grid-template-columns:1fr;}
+    .list-header, .cand-row{grid-template-columns:28px 1fr 90px 100px;}
+    .h-pos,.h-int,.h-stage,.col-pos,.col-int,.col-stage{display:none;}
+    .grid2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Login gate -->
+<div id="loginGate" style="display:flex">
+  <div class="login-card">
+    <div class="thoth-logo">
+      <span class="thoth-word">THOTH AI</span>
+    </div>
+    <div class="login-title">Internal CDD Pools</div>
+    <div class="login-sub">เข้าสู่ระบบด้วยบัญชี Google เพื่อใช้งาน</div>
+    <button class="btn btn-google" id="lgGoogle">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      เข้าสู่ระบบด้วย Google
+    </button>
+    <div class="lg-error" id="lgError"></div>
+  </div>
+</div>
+
+<div class="app" style="display:none">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo thoth-logo">
+      <span class="thoth-word" style="font-size:18px">THOTH AI</span></div>
+    <div class="nav">
+      <div class="nav-item active" data-view="dashboard"><i class="ti ti-layout-dashboard"></i> <span>Dashboard</span></div>
+      <div class="nav-item" data-view="candidates"><i class="ti ti-users"></i> <span>Candidates</span></div>
+      <div class="nav-item" data-view="bank"><i class="ti ti-list-details"></i> <span>Scoring Rubric</span></div>
+      <div class="nav-item" data-view="access"><i class="ti ti-user-shield"></i> <span>Access Log</span></div>
+      <div class="nav-sep"></div>
+      <div class="nav-item" onclick="importJSON()"><i class="ti ti-file-import"></i> <span>Import</span></div>
+      <div class="nav-item" onclick="exportJSON()"><i class="ti ti-file-export"></i> <span>Export</span></div>
+      <div class="nav-item" id="themeToggle"><i class="ti ti-moon" id="themeIcon"></i> <span id="themeLabel">Dark mode</span></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-box"><i class="ti ti-user-circle"></i> <span id="userEmail" onclick="setDisplayName()" style="cursor:pointer" title="คลิกเพื่อเปลี่ยนชื่อที่แสดง"></span>
+        <button class="logout-btn" onclick="setDisplayName()" title="เปลี่ยนชื่อที่แสดง"><i class="ti ti-edit"></i></button>
+        <button class="logout-btn" onclick="logout()" title="ออกจากระบบ"><i class="ti ti-logout"></i></button></div>
+      <div class="sync-row"><div class="sync-dot" id="syncDot"></div> <span id="syncText">Connecting…</span></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSub">Overview of all candidate interview scores</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn" onclick="exportCSV()"><i class="ti ti-table-export"></i> CSV</button>
+        <button class="btn btn-primary" onclick="openCandidateModal()"><i class="ti ti-user-plus"></i> Add Candidate</button>
+      </div>
+    </div>
+
+    <!-- Dashboard view -->
+    <div id="view-dashboard">
+      <div class="stats" id="dashStats"></div>
+      <div class="panel">
+        <h3><i class="ti ti-trophy" style="color:var(--amber)"></i> Top Candidates</h3>
+        <div id="dashTop"></div>
+      </div>
+    </div>
+
+    <!-- Candidates view -->
+    <div id="view-candidates" style="display:none;">
+      <div class="filters">
+        <div class="search-box"><i class="ti ti-search"></i><input id="searchInput" placeholder="Search name / position..." oninput="renderCandidates()"></div>
+        <select id="filterStage" onchange="renderCandidates()">
+          <option value="">All statuses</option>
+          <option value="applied">Applied</option>
+          <option value="screening">Screening</option>
+          <option value="interview">Interview</option>
+          <option value="kiv">Keep in View</option>
+          <option value="offer">Offer</option>
+          <option value="hired">Hired</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select id="filterSort" onchange="renderCandidates()">
+          <option value="score">Sort by highest score</option>
+          <option value="name">Sort by name</option>
+          <option value="recent">Sort by most recent</option>
+        </select>
+      </div>
+      <div class="list">
+        <div class="list-header">
+          <span class="c">#</span><span>Candidate</span><span class="h-pos">Position</span>
+          <span class="h-stage">Status</span><span class="c h-int">Interviews</span>
+          <span class="c">Weighted</span><span class="c">Level</span>
+        </div>
+        <div id="candList"></div>
+      </div>
+    </div>
+
+    <!-- Detail view -->
+    <div id="view-detail" style="display:none;"></div>
+
+    <!-- Scoring rubric view -->
+    <div id="view-bank" style="display:none;"></div>
+
+    <!-- Access log view -->
+    <div id="view-access" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- Candidate modal -->
+<div class="modal-overlay" id="candModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div><h2 id="candModalTitle">Add Candidate</h2></div>
+      <button class="modal-close" onclick="closeModal('candModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="candId">
+      <div class="grid2">
+        <div class="field"><label>Full Name *</label><input id="fName" placeholder="e.g. John Smith"></div>
+        <div class="field"><label>Position Applied *</label><input id="fPosition" placeholder="e.g. QA Analyst"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Team / Project</label><input id="fDept" placeholder="e.g. QA Team"></div>
+        <div class="field"><label>Status</label>
+          <select id="fStage">
+            <option value="applied">Applied</option>
+            <option value="screening">Screening</option>
+            <option value="interview" selected>Interview</option>
+            <option value="kiv">Keep in View</option>
+            <option value="offer">Offer</option>
+            <option value="hired">Hired</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Email</label><input id="fEmail" placeholder="name@email.com"></div>
+        <div class="field"><label>Phone</label><input id="fPhone" placeholder="08x-xxx-xxxx"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Additional info..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <span></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn" onclick="closeModal('candModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCandidate()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scorecard modal -->
+<div class="modal-overlay" id="scoreModal">
+  <div class="modal-box wide">
+    <div class="modal-head">
+      <div><h2>QA Interview Scorecard</h2><div class="sub" id="scoreModalSub"></div></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="timer-chip" title="Time elapsed"><i class="ti ti-clock"></i> <span id="scTimer">00:00</span></span>
+        <button class="modal-close" onclick="closeModal('scoreModal')">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="scCandId">
+      <div class="scale-legend">
+        <b>1</b> Unsatisfactory — cannot demonstrate the capability &nbsp;·&nbsp;
+        <b>2</b> Below Standard — noticeable gaps, substantial training needed &nbsp;·&nbsp;
+        <b>3</b> Acceptable — meets baseline, some coaching needed &nbsp;·&nbsp;
+        <b>4</b> Strong — solid with minor gaps &nbsp;·&nbsp;
+        <b>5</b> Outstanding — exceeds expectations, ready immediately
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Interviewer *</label><input id="scInterviewer" placeholder="Scorer name"></div>
+        <div class="field"><label>Interview Round</label>
+          <select id="scRound">
+            <option selected>QA Interview</option>
+            <option>HR Screening</option>
+            <option>Technical Round</option>
+            <option>Final Round</option>
+          </select>
+        </div>
+      </div>
+      <div id="scSections"></div>
+      <div class="field" style="margin-top:18px">
+        <label>Work Availability</label>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px">Overnight
+            <div class="seg" id="segNight"><button data-v="1">Yes</button><button data-v="0">No</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px">OT
+            <div class="seg" id="segOT"><button data-v="1">Yes</button><button data-v="0">No</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>จุดแข็ง (Strengths)</label><textarea id="scStrength" placeholder="สิ่งที่ผู้สมัครทำได้ดี / จุดเด่น..."></textarea></div>
+        <div class="field"><label>สิ่งที่ต้องพัฒนา (Focused Area)</label><textarea id="scFocus" placeholder="จุดที่ควรพัฒนา / ต้องโค้ชเพิ่ม..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div class="live-overall">Weighted Score: <b id="scLiveOverall">—</b> <span id="scLiveVerdict"></span></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" onclick="closeModal('scoreModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveScorecard()">Save Scorecard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+/* ================= QA Interview Scorecard — weighted model ================= */
+const SCALE = [1, 2, 3, 4, 5];
+
+// 7 weighted criteria (weights total 100%). Weighted total = Σ(score × weight), max 5.00.
+const CRITERIA = [
+  {key:'rules',     name:'Rule-Based Judgment & Escalation',  weight:0.20, desc:'Understands rule-based work, handles ambiguity, escalates appropriately.'},
+  {key:'precision', name:'Precision & Verification',          weight:0.20, desc:'Demonstrates precision, catches inconsistencies, verifies before concluding.'},
+  {key:'rootcause', name:'Root-Cause & Data Reasoning',       weight:0.15, desc:'Investigates root causes, reasons with data, proposes practical actions.'},
+  {key:'comm',      name:'Communication & Feedback',          weight:0.15, desc:'Explains clearly, delivers feedback constructively, professional tone.'},
+  {key:'tooling',   name:'Tools, Reporting & Written English', weight:0.10, desc:'Spreadsheet capability, reporting discipline, written English for client use.'},
+  {key:'ownership', name:'Ownership & Resilience',            weight:0.10, desc:'Ownership, resilience with repetitive or sensitive content, dependability.'},
+  {key:'teamfit',   name:'Collaboration & Coachability',      weight:0.10, desc:'Collaborative, coachable, aligned with team values.'},
+];
+const CRIT_BY_KEY = Object.fromEntries(CRITERIA.map(c=>[c.key,c]));
+
+// Verdict bands over the weighted total (out of 5), with recommendation + action.
+const LEVELS = [
+  {min:4.5, k:'fee', level:'Outstanding',    rec:'Strong Hire',           action:'Proceed to offer. Consider for senior QA scope.',                     def:'Answers exceed expectations with concrete examples and depth. Ready to contribute immediately.'},
+  {min:3.5, k:'ee',  level:'Strong',         rec:'Hire',                  action:'Proceed to offer at standard QA level.',                              def:'Solid, well-reasoned answers with minor gaps. Meets the requirement comfortably.'},
+  {min:2.5, k:'me',  level:'Acceptable',     rec:'Hire with Reservation', action:'Proceed only if headcount is urgent. Define a 30-day development plan.', def:'Meets the baseline requirement. Some coaching needed but no material concern.'},
+  {min:1.5, k:'kiv', level:'Below Standard', rec:'Hold',                  action:'Keep on file. Re-consider if the pipeline is thin.',                  def:'Noticeable gaps in understanding or reasoning. Substantial training required.'},
+  {min:0,   k:'fbe', level:'Unsatisfactory', rec:'Do Not Proceed',        action:'Decline politely and close the candidate.',                           def:'Cannot demonstrate the required capability. Not suitable for the role.'},
+];
+function verdictOf(v){
+  if(v==null) return null;
+  return LEVELS.find(l=>v>=l.min) || LEVELS[LEVELS.length-1];
+}
+
+/* ================= Data & sync ================= */
+const SAMPLE = [
+  {id:1, name:'Jane Sample', position:'QA Analyst', dept:'QA Team', stage:'interview', email:'demo@email.com', phone:'081-000-0000', notes:'Sample data — safe to delete', createdAt:Date.now()-86400000, updatedAt:Date.now()-86400000,
+    scorecards:[
+      {id:2, interviewer:'HR Demo', round:'QA Interview', date:Date.now()-80000000,
+        sections:{rules:{score:3}, precision:{score:4}, rootcause:{score:3}, comm:{score:3}, tooling:{score:2}, ownership:{score:3}, teamfit:{score:4}},
+        night:1, ot:1, comment:'Sample scorecard — strong on precision, needs coaching on tooling/reporting'},
+    ]},
+];
+
+let candidates = loadLocal();
+let idc = 0;
+function nextId(){ return Date.now()*100 + (idc = (idc+1)%100); }
+
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem('cdd_pools_v2');
+    if(raw){ const a = JSON.parse(raw); if(Array.isArray(a)) return a; }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(SAMPLE));
+}
+function persistLocal(){ try{ localStorage.setItem('cdd_pools_v2', JSON.stringify(candidates)); }catch(e){} }
+
+// ---- Firebase (shared real-time database) ----
+const firebaseConfig = {
+  apiKey: "AIzaSyCcgqk8syDd4etzczr0Lev-GpGJQg2Yapg",
+  authDomain: "hobi-partner-dashboard.firebaseapp.com",
+  projectId: "hobi-partner-dashboard",
+  storageBucket: "hobi-partner-dashboard.firebasestorage.app",
+  messagingSenderId: "1088313132252",
+  appId: "1:1088313132252:web:ad8058e7b118e1c0d8e019",
+  measurementId: "G-J5V8Q9XC89"
+};
+let db=null, HIRE_DOC=null, ACCESS_COL=null, auth=null, firebaseReady=false;
+let isApplyingRemote=false, saveTimer=null, initialLoadComplete=false;
+try{
+  if(typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    HIRE_DOC = db.collection('hobi').doc('cdd_pools');
+    ACCESS_COL = HIRE_DOC.collection('access_logs');
+    auth = firebase.auth();
+    firebaseReady = true;
+  }
+}catch(e){ console.error('Firebase init failed:', e); }
+
+function setSync(state){
+  const dot=document.getElementById('syncDot'), txt=document.getElementById('syncText');
+  if(state==='on'){ dot.className='sync-dot on'; txt.textContent='Auto-sync (real-time)'; }
+  else if(state==='off'){ dot.className='sync-dot off'; txt.textContent='Offline — saved locally'; }
+  else { dot.className='sync-dot'; txt.textContent='Connecting…'; }
+}
+
+if(HIRE_DOC){
+  HIRE_DOC.onSnapshot(doc=>{
+    setSync('on');
+    if(doc.exists){
+      const d = doc.data();
+      if(d && d.json){
+        try{
+          const arr = JSON.parse(d.json);
+          if(Array.isArray(arr)){
+            isApplyingRemote = true;
+            candidates = arr;
+            persistLocal();
+            rerenderCurrent();
+            isApplyingRemote = false;
+          }
+        }catch(e){ console.error('bad remote payload', e); }
+      }
+    }
+    initialLoadComplete = true;
+  }, err=>{ console.error('snapshot error', err); setSync('off'); initialLoadComplete = true; });
+  setTimeout(()=>{ if(!initialLoadComplete){ setSync('off'); initialLoadComplete = true; } }, 6000);
+}else{
+  setSync('off');
+  initialLoadComplete = true;
+}
+
+function saveData(){
+  persistLocal();
+  if(!HIRE_DOC || isApplyingRemote || !initialLoadComplete) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    HIRE_DOC.set({ json: JSON.stringify(candidates), updatedAt: Date.now() })
+      .then(()=> setSync('on'))
+      .catch(e=>{ console.error('save failed', e); setSync('off'); });
+  }, 700);
+}
+
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ================= Score aggregation ================= */
+// Weighted average over the criteria that were scored (partial scoring still gives a 1–5 result).
+function scorecardOverall(s){
+  let wsum=0, w=0;
+  CRITERIA.forEach(cr=>{
+    const v = s?.sections?.[cr.key]?.score;
+    if(typeof v==='number'){ wsum += v*cr.weight; w += cr.weight; }
+  });
+  return w ? wsum/w : null;
+}
+function candOverall(c){
+  const vals = (c.scorecards||[]).map(scorecardOverall).filter(v=>v!=null);
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+}
+function itemAvg(c, key){
+  let sum=0, n=0;
+  (c.scorecards||[]).forEach(s=>{
+    const v = s.sections?.[key]?.score;
+    if(typeof v==='number'){ sum+=v; n++; }
+  });
+  return n ? sum/n : null;
+}
+function scoreClass(v){
+  if(v==null) return 'score-na';
+  if(v>=4.5) return 'score-hi'; if(v>=3.5) return 'score-mid';
+  if(v>=2.5) return 'score-kiv'; return 'score-lo';
+}
+function scoreColor(v){
+  if(v==null) return 'var(--border)';
+  if(v>=4.5) return 'var(--green)'; if(v>=3.5) return 'var(--accent)';
+  if(v>=2.5) return 'var(--amber)'; return 'var(--red)';
+}
+function fmtScore(v){ return v==null ? '—' : (Math.round(v*100)/100).toFixed(2).replace(/0$/,'').replace(/\.$/,''); }
+function fmt2(v){ return v==null ? '—' : (Math.round(v*100)/100).toFixed(2); }
+function pct(w){ return Math.round(w*100)+'%'; }
+function fmtDate(ts){ if(!ts) return ''; return new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}); }
+function fmtDateTime(ts){ if(!ts) return ''; return new Date(ts).toLocaleString('en-GB',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+
+/* ================= Views ================= */
+let currentView='dashboard', currentDetailId=null;
+function showView(name){
+  currentView=name;
+  document.querySelectorAll('.nav-item[data-view]').forEach(i=>i.classList.toggle('active', i.dataset.view===name));
+  ['dashboard','candidates','detail','bank','access'].forEach(v=> document.getElementById('view-'+v).style.display = v===name?'':'none');
+  const titles={
+    dashboard:['Dashboard','Overview of all candidate interview scores'],
+    candidates:['Candidates','Candidate list with weighted QA scores'],
+    bank:['Scoring Rubric','QA scoring criteria, weights, levels and recommendations'],
+    access:['Access Log','ผู้ที่เข้าสู่ระบบเพื่อดูข้อมูล'],
+    detail:['Candidate Detail',''],
+  };
+  if(titles[name]){ document.getElementById('pageTitle').textContent=titles[name][0]; document.getElementById('pageSub').textContent=titles[name][1]; }
+  if(name==='dashboard') renderDashboard();
+  if(name==='candidates') renderCandidates();
+  if(name==='bank') renderBank();
+  if(name==='access') renderAccessLog();
+}
+document.querySelectorAll('.nav-item[data-view]').forEach(i=> i.onclick=()=>showView(i.dataset.view));
+function rerenderCurrent(){
+  if(currentView==='detail' && currentDetailId!=null){
+    if(candidates.some(c=>c.id===currentDetailId)) openDetail(currentDetailId);
+    else showView('candidates');
+  }else showView(currentView);
+}
+
+function renderDashboard(){
+  const total=candidates.length;
+  const totalCards=candidates.reduce((a,c)=>a+(c.scorecards?.length||0),0);
+  const scored=candidates.filter(c=>candOverall(c)!=null);
+  const overall = scored.length ? scored.reduce((a,c)=>a+candOverall(c),0)/scored.length : null;
+  const kiv = candidates.filter(c=>{ const v=candOverall(c); return (v!=null && v>=1.5 && v<2.5) || c.stage==='kiv'; }).length;
+  const pending = candidates.filter(c=>!(c.scorecards?.length)).length;
+  const stats=[
+    {icon:'ti-users', color:'accent', v:total, l:'Total Candidates'},
+    {icon:'ti-clipboard-check', color:'blue', v:totalCards, l:'Total Scorecards'},
+    {icon:'ti-star', color:'green', v:fmtScore(overall), l:'Avg Weighted Score'},
+    {icon:'ti-eye-search', color:'amber', v:kiv+' / '+pending, l:'Below Standard / Pending'},
+  ];
+  document.getElementById('dashStats').innerHTML = stats.map(s=>`
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--${s.color}-light,var(--accent-light));color:var(--${s.color})"><i class="ti ${s.icon}"></i></div>
+      <div><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>
+    </div>`).join('');
+
+  const top=[...scored].sort((a,b)=>candOverall(b)-candOverall(a)).slice(0,5);
+  document.getElementById('dashTop').innerHTML = top.length ? top.map((c,i)=>{
+    const v=candOverall(c); const vd=verdictOf(v);
+    return `<div class="cand-row" style="grid-template-columns:34px 1fr 150px 160px 90px;" onclick="openDetail(${c.id})">
+      <div class="cand-num">${i+1}</div>
+      <div><div class="cand-name">${esc(c.name)}</div><div class="cand-sub">${esc(c.position)}</div></div>
+      <div class="cell">${esc(c.dept||'')}</div>
+      <div class="c">${vd?`<span class="verdict v-${vd.k}">${vd.level}</span>`:''}</div>
+      <div class="c"><span class="score-pill ${scoreClass(v)}">${fmtScore(v)}</span></div>
+    </div>`;
+  }).join('') : '<div class="empty"><i class="ti ti-inbox"></i>No interview scores yet</div>';
+}
+
+function renderCandidates(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const stage=document.getElementById('filterStage').value;
+  const sort=document.getElementById('filterSort').value;
+  let list=candidates.filter(c=>{
+    if(stage && c.stage!==stage) return false;
+    if(q && !(`${c.name} ${c.position} ${c.dept||''}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(sort==='name') return a.name.localeCompare(b.name);
+    if(sort==='recent') return (b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0);
+    const va=candOverall(a), vb=candOverall(b);
+    return (vb==null?-1:vb)-(va==null?-1:va);
+  });
+  const el=document.getElementById('candList');
+  if(!list.length){ el.innerHTML='<div class="empty"><i class="ti ti-user-search"></i>No candidates found</div>'; return; }
+  el.innerHTML=list.map((c,i)=>{
+    const v=candOverall(c); const vd=verdictOf(v); const n=c.scorecards?.length||0;
+    return `<div class="cand-row" onclick="openDetail(${c.id})">
+      <div class="cand-num">${i+1}</div>
+      <div><div class="cand-name">${esc(c.name)}</div><div class="cand-sub">${esc(c.email||'')}</div></div>
+      <div class="cell col-pos">${esc(c.position)}</div>
+      <div class="col-stage"><span class="badge st-${c.stage}">${stageLabel(c.stage)}</span></div>
+      <div class="c cell col-int">${n}</div>
+      <div class="c"><span class="score-pill ${scoreClass(v)}">${fmtScore(v)}</span></div>
+      <div class="c">${vd?`<span class="verdict v-${vd.k}">${vd.level}</span>`:'<span class="cell">—</span>'}</div>
+    </div>`;
+  }).join('');
+}
+function stageLabel(s){ return {applied:'Applied',screening:'Screening',interview:'Interview',kiv:'Keep in View',offer:'Offer',hired:'Hired',rejected:'Rejected'}[s]||s; }
+
+function openDetail(id){
+  const c=candidates.find(x=>x.id===id); if(!c) return;
+  currentDetailId=id; currentView='detail';
+  const v=candOverall(c); const vd=verdictOf(v);
+  const cards=[...(c.scorecards||[])].sort((a,b)=>(b.date||0)-(a.date||0));
+  const latest=cards[0];
+  const el=document.getElementById('view-detail');
+
+  const barsHtml = CRITERIA.map(cr=>{
+    const a=itemAvg(c,cr.key); const p=a==null?0:(a/5*100);
+    return `<div class="crit-bar-row">
+      <div class="crit-bar-top"><span>${cr.name} <span style="color:var(--text3)">· ${pct(cr.weight)}</span></span><span class="v">${fmtScore(a)}</span></div>
+      <div class="crit-bar"><span style="width:${p}%;background:${scoreColor(a)}"></span></div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    <button class="link-btn" style="margin-bottom:14px" onclick="showView('candidates')"><i class="ti ti-arrow-left"></i> Back to list</button>
+    <div class="detail-top">
+      <div style="flex:1;min-width:220px">
+        <div class="detail-name">${esc(c.name)}</div>
+        <div class="detail-meta">${esc(c.position)}${c.dept?' · '+esc(c.dept):''} <span class="badge st-${c.stage}" style="margin-left:6px">${stageLabel(c.stage)}</span></div>
+        <div class="detail-meta" style="margin-top:6px">
+          ${c.email?`<i class="ti ti-mail"></i> ${esc(c.email)}&nbsp;&nbsp;`:''}
+          ${c.phone?`<i class="ti ti-phone"></i> ${esc(c.phone)}`:''}
+        </div>
+        ${latest && (latest.night!=null || latest.ot!=null) ? `<div class="detail-meta" style="margin-top:6px">
+          ${latest.night!=null?`<span class="badge ${latest.night?'st-offer':'st-rejected'}">Overnight: ${latest.night?'Yes':'No'}</span>`:''}
+          ${latest.ot!=null?`<span class="badge ${latest.ot?'st-offer':'st-rejected'}" style="margin-left:6px">OT: ${latest.ot?'Yes':'No'}</span>`:''}
+        </div>`:''}
+        ${c.notes?`<div class="detail-meta" style="margin-top:6px;font-style:italic">"${esc(c.notes)}"</div>`:''}
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="openScoreModal(${c.id})"><i class="ti ti-clipboard-plus"></i> Start QA Scoring</button>
+          <button class="btn btn-sm" onclick="openCandidateModal(${c.id})"><i class="ti ti-edit"></i> Edit</button>
+          <button class="btn btn-sm" onclick="deleteCandidate(${c.id})"><i class="ti ti-trash"></i> Delete</button>
+        </div>
+      </div>
+      <div class="detail-big-score">
+        <div class="n" style="color:${scoreColor(v)}">${fmtScore(v)}</div>
+        <div class="l">Weighted Score / 5</div>
+        ${vd?`<div style="margin-top:8px"><span class="verdict v-${vd.k}">${vd.level}</span></div>
+          <div style="margin-top:6px;font-size:12px;font-weight:600;color:${scoreColor(v)}">${vd.rec}</div>
+          <div style="margin-top:2px;font-size:11px;color:var(--text3);max-width:190px">${vd.action}</div>`:''}
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <h3>Scorecards (${cards.length})</h3>
+        ${cards.length ? cards.map(s=>scorecardHtml(c.id,s)).join('') : `<div class="empty"><i class="ti ti-clipboard"></i>No scorecards yet<br><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="openScoreModal(${c.id})">Start scoring</button></div>`}
+      </div>
+      <div class="panel">
+        <h3>Weighted Criteria (avg 1–5)</h3>
+        ${barsHtml}
+      </div>
+    </div>`;
+  document.getElementById('pageTitle').textContent=c.name;
+  document.getElementById('pageSub').textContent='Details and interview scores';
+  ['dashboard','candidates','detail','bank','access'].forEach(x=> document.getElementById('view-'+x).style.display = x==='detail'?'':'none');
+  document.querySelectorAll('.nav-item[data-view]').forEach(i=>i.classList.remove('active'));
+}
+
+function scorecardHtml(candId,s){
+  const ov=scorecardOverall(s); const vd=verdictOf(ov);
+  const detailRows = CRITERIA.map(cr=>{
+    const sec=s.sections?.[cr.key]; if(!sec || sec.score==null) return '';
+    return `<div class="sc-detail-row"><span>${cr.name} <span style="color:var(--text3)">· ${pct(cr.weight)}</span></span><b>${sec.score} → ${fmt2(sec.score*cr.weight)}</b></div>`+
+      (sec.note?`<div class="sc-detail-note">${esc(sec.note)}</div>`:'');
+  }).join('');
+  return `<div class="sc-card">
+    <div class="sc-head">
+      <div><div class="sc-who">${esc(s.interviewer)}</div><div class="sc-when">${esc(s.round||'')} · ${fmtDate(s.date)}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${vd?`<span class="verdict v-${vd.k}">${vd.level}</span>`:''}
+        <span class="score-pill ${scoreClass(ov)}">${fmtScore(ov)}</span>
+        <button class="sc-del" title="แก้ชื่อผู้สัมภาษณ์" onclick="editInterviewer(${candId},${s.id})"><i class="ti ti-edit"></i></button>
+        <button class="sc-del" title="Delete" onclick="deleteScorecard(${candId},${s.id})"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>
+    <div class="sc-scores">
+      ${vd?`<span class="sc-chip">Recommendation <b>${vd.rec}</b></span>`:''}
+      ${s.night!=null?`<span class="sc-chip">Overnight <b>${s.night?'✓':'✗'}</b></span>`:''}
+      ${s.ot!=null?`<span class="sc-chip">OT <b>${s.ot?'✓':'✗'}</b></span>`:''}
+    </div>
+    ${(s.strength||s.focus)?`<div class="proscons">
+      ${s.strength?`<div class="pc-box pc-pros"><div class="pc-head"><i class="ti ti-thumb-up"></i> จุดแข็ง (Pros)</div><div class="pc-body">${esc(s.strength)}</div></div>`:''}
+      ${s.focus?`<div class="pc-box pc-cons"><div class="pc-head"><i class="ti ti-alert-triangle"></i> ต้องพัฒนา (Cons)</div><div class="pc-body">${esc(s.focus)}</div></div>`:''}
+    </div>`:''}
+    ${s.comment?`<div class="sc-comment">${esc(s.comment)}</div>`:''}
+    ${detailRows?`<details class="sc-details"><summary>View weighted breakdown</summary>${detailRows}</details>`:''}
+  </div>`;
+}
+
+/* ================= Scoring rubric view ================= */
+function renderBank(){
+  const el=document.getElementById('view-bank');
+  const critRows = CRITERIA.map((cr,i)=>`
+    <div class="bank-item">${i+1}. ${cr.name} <span style="color:var(--accent);font-weight:700">· ${pct(cr.weight)}</span></div>
+    <div class="bank-q">${esc(cr.desc)}</div>`).join('');
+  const levelRows = LEVELS.map(l=>`
+    <div class="sc-detail-row"><span><span class="verdict v-${l.k}">${l.level}</span></span><b>≥ ${l.min.toFixed(1)}</b></div>
+    <div class="sc-detail-note">${esc(l.def)}</div>`).join('');
+  const recRows = LEVELS.map(l=>`
+    <div class="sc-detail-row"><span><b>${l.rec}</b></span><span style="color:var(--text3)">${l.level}</span></div>
+    <div class="sc-detail-note">${esc(l.action)}</div>`).join('');
+  el.innerHTML=`
+    <div class="bank-card">
+      <h3><i class="ti ti-adjustments-check" style="color:var(--accent)"></i> Scoring Criteria <span class="bank-time">(weights total 100%)</span></h3>
+      <div class="bank-obj">Score each criterion 1–5. Weighted total = Σ(score × weight), for a maximum of 5.00.</div>
+      ${critRows}
+    </div>
+    <div class="bank-card">
+      <h3><i class="ti ti-stairs-up" style="color:var(--accent)"></i> Score Levels</h3>
+      ${levelRows}
+    </div>
+    <div class="bank-card">
+      <h3><i class="ti ti-clipboard-check" style="color:var(--accent)"></i> Recommendation &amp; Action</h3>
+      ${recRows}
+    </div>
+    <div class="scale-legend" style="margin-top:14px">
+      <b>1</b> Unsatisfactory &nbsp;·&nbsp; <b>2</b> Below Standard &nbsp;·&nbsp; <b>3</b> Acceptable &nbsp;·&nbsp; <b>4</b> Strong &nbsp;·&nbsp; <b>5</b> Outstanding
+    </div>`;
+}
+
+/* ================= Access log view ================= */
+function renderAccessLog(){
+  const el=document.getElementById('view-access');
+  el.innerHTML=`<div class="panel">
+    <h3 style="display:flex;justify-content:space-between;align-items:center">
+      <span><i class="ti ti-user-shield" style="color:var(--accent)"></i> ผู้เข้าใช้งาน (Access Log)</span>
+      <button class="btn btn-sm" onclick="renderAccessLog()"><i class="ti ti-refresh"></i> รีเฟรช</button>
+    </h3>
+    <div id="alBody"><div class="empty"><i class="ti ti-loader-2"></i>กำลังโหลด…</div></div>
+  </div>`;
+  const body=document.getElementById('alBody');
+  if(!ACCESS_COL){ body.innerHTML='<div class="empty"><i class="ti ti-wifi-off"></i>ต้องเชื่อมต่อออนไลน์ (Firebase) จึงจะดูบันทึกได้</div>'; return; }
+  ACCESS_COL.orderBy('ts','desc').limit(300).get().then(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    if(!rows.length){ body.innerHTML='<div class="empty"><i class="ti ti-user-off"></i>ยังไม่มีบันทึกการเข้าใช้งาน</div>'; return; }
+    body.innerHTML=`<div class="list">
+      <div class="list-header" style="grid-template-columns:40px 1fr 170px">
+        <span class="c">#</span><span>อีเมล</span><span>เวลาเข้าใช้งาน</span>
+      </div>
+      ${rows.map((r,i)=>`<div class="cand-row" style="grid-template-columns:40px 1fr 170px;cursor:default">
+        <div class="cand-num">${i+1}</div>
+        <div><div class="cand-name">${esc(r.name||r.email||'—')}</div><div class="cand-sub">${esc(r.email||'')}</div></div>
+        <div class="cell">${fmtDateTime(r.ts)}</div>
+      </div>`).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px">รวม ${rows.length} รายการล่าสุด</div>`;
+  }).catch(e=>{ body.innerHTML='<div class="empty">โหลดบันทึกไม่สำเร็จ: '+esc(e.message)+'</div>'; });
+}
+
+/* ================= Candidate modal ================= */
+function openCandidateModal(id){
+  document.getElementById('candId').value = id||'';
+  document.getElementById('candModalTitle').textContent = id?'Edit Candidate':'Add Candidate';
+  const c = id ? candidates.find(x=>x.id===id) : null;
+  document.getElementById('fName').value=c?.name||'';
+  document.getElementById('fPosition').value=c?.position||'';
+  document.getElementById('fDept').value=c?.dept||'';
+  document.getElementById('fStage').value=c?.stage||'interview';
+  document.getElementById('fEmail').value=c?.email||'';
+  document.getElementById('fPhone').value=c?.phone||'';
+  document.getElementById('fNotes').value=c?.notes||'';
+  document.getElementById('candModal').classList.add('open');
+}
+function saveCandidate(){
+  const name=document.getElementById('fName').value.trim();
+  const position=document.getElementById('fPosition').value.trim();
+  if(!name||!position){ alert('Please enter name and position'); return; }
+  const id=document.getElementById('candId').value;
+  const data={
+    name, position,
+    dept:document.getElementById('fDept').value.trim(),
+    stage:document.getElementById('fStage').value,
+    email:document.getElementById('fEmail').value.trim(),
+    phone:document.getElementById('fPhone').value.trim(),
+    notes:document.getElementById('fNotes').value.trim(),
+    updatedAt:Date.now(),
+  };
+  if(id){ Object.assign(candidates.find(x=>x.id==id), data); }
+  else{ candidates.push({id:nextId(), ...data, createdAt:Date.now(), scorecards:[]}); }
+  saveData(); closeModal('candModal');
+  if(id && currentView==='detail') openDetail(Number(id)); else showView('candidates');
+}
+function deleteCandidate(id){
+  if(!confirm('Delete this candidate and all their scores?')) return;
+  candidates=candidates.filter(c=>c.id!==id); saveData(); showView('candidates');
+}
+
+/* ================= Scorecard modal ================= */
+let scDraft=null, scTimerInt=null, scStart=0;
+function openScoreModal(candId){
+  const c=candidates.find(x=>x.id===candId); if(!c) return;
+  document.getElementById('scCandId').value=candId;
+  document.getElementById('scoreModalSub').textContent='Candidate: '+c.name+' · '+c.position;
+  document.getElementById('scInterviewer').value=displayName();
+  document.getElementById('scStrength').value='';
+  document.getElementById('scFocus').value='';
+  document.getElementById('scRound').selectedIndex=0;
+  scDraft={sections:{}, night:null, ot:null};
+
+  document.getElementById('scSections').innerHTML = `
+    <div class="group-head">
+      <div class="group-title"><i class="ti ti-adjustments-check"></i> QA Scoring Criteria</div>
+      <div class="group-time">Weighted · max 5.00</div>
+    </div>
+    ${CRITERIA.map(cr=>`
+      <div class="item-row" id="row-${cr.key}">
+        <div class="item-top">
+          <div style="flex:1;min-width:200px">
+            <div class="item-name">${cr.name} <span style="color:var(--accent);font-weight:700;font-size:12px">· ${pct(cr.weight)}</span></div>
+            <div class="item-hint">${cr.desc}</div>
+          </div>
+          <div class="rating" data-key="${cr.key}">
+            ${SCALE.map(n=>`<button type="button" onclick="setItemScore('${cr.key}',${n})">${n}</button>`).join('')}
+          </div>
+        </div>
+        <input class="q-note" style="margin-top:8px" placeholder="Notes / evidence for this criterion..." oninput="setItemNote('${cr.key}',this.value)">
+      </div>`).join('')}
+  `;
+
+  document.querySelectorAll('#segNight button').forEach(b=> b.onclick=()=>setSeg('night',Number(b.dataset.v)));
+  document.querySelectorAll('#segOT button').forEach(b=> b.onclick=()=>setSeg('ot',Number(b.dataset.v)));
+  updateSegs(); updateLiveOverall();
+
+  scStart=Date.now();
+  clearInterval(scTimerInt);
+  scTimerInt=setInterval(()=>{
+    const s=Math.floor((Date.now()-scStart)/1000);
+    const mm=String(Math.floor(s/60)).padStart(2,'0'), ss=String(s%60).padStart(2,'0');
+    const el=document.getElementById('scTimer'); if(el) el.textContent=mm+':'+ss;
+  },1000);
+  document.getElementById('scTimer').textContent='00:00';
+  document.getElementById('scTimer').style.color='';
+  document.getElementById('scoreModal').classList.add('open');
+}
+function setItemNote(key,v){
+  scDraft.sections[key]=scDraft.sections[key]||{};
+  scDraft.sections[key].note=v.trim();
+}
+function setItemScore(key,n){
+  scDraft.sections[key]=scDraft.sections[key]||{};
+  if(scDraft.sections[key].score===n) delete scDraft.sections[key].score;
+  else scDraft.sections[key].score=n;
+  const row=document.querySelector(`.rating[data-key="${key}"]`);
+  row.querySelectorAll('button').forEach(b=> b.classList.toggle('sel', Number(b.textContent)===scDraft.sections[key].score));
+  updateLiveOverall();
+}
+function setSeg(field,v){
+  scDraft[field] = scDraft[field]===v ? null : v;
+  updateSegs();
+}
+function updateSegs(){
+  [['segNight','night'],['segOT','ot']].forEach(([id,f])=>{
+    document.querySelectorAll('#'+id+' button').forEach(b=>{
+      const v=Number(b.dataset.v);
+      b.className = scDraft[f]===v ? (v?'sel-yes':'sel-no') : '';
+    });
+  });
+}
+function updateLiveOverall(){
+  const ov=scorecardOverall(scDraft);
+  document.getElementById('scLiveOverall').textContent=fmtScore(ov);
+  const vd=verdictOf(ov);
+  document.getElementById('scLiveVerdict').innerHTML = vd?`<span class="verdict v-${vd.k}">${vd.level}</span> <span style="color:var(--text3);font-size:12px">${vd.rec}</span>`:'';
+}
+function saveScorecard(){
+  const candId=Number(document.getElementById('scCandId').value);
+  const interviewer=document.getElementById('scInterviewer').value.trim();
+  if(!interviewer){ alert('Please enter the interviewer name'); return; }
+  const scored=Object.values(scDraft.sections).filter(s=>typeof s.score==='number').length;
+  if(!scored){ alert('Please score at least 1 criterion'); return; }
+  const c=candidates.find(x=>x.id===candId);
+  c.scorecards=c.scorecards||[];
+  c.scorecards.push({
+    id:nextId(), interviewer,
+    round:document.getElementById('scRound').value,
+    date:Date.now(),
+    sections:scDraft.sections,
+    night:scDraft.night, ot:scDraft.ot,
+    strength:document.getElementById('scStrength').value.trim(),
+    focus:document.getElementById('scFocus').value.trim(),
+    durationSec:Math.floor((Date.now()-scStart)/1000),
+  });
+  c.updatedAt=Date.now();
+  saveData(); closeModal('scoreModal'); openDetail(candId);
+}
+function deleteScorecard(candId,scId){
+  if(!confirm('Delete this scorecard?')) return;
+  const c=candidates.find(x=>x.id===candId);
+  c.scorecards=c.scorecards.filter(s=>s.id!==scId);
+  c.updatedAt=Date.now();
+  saveData(); openDetail(candId);
+}
+function editInterviewer(candId,scId){
+  const c=candidates.find(x=>x.id===candId); if(!c) return;
+  const s=(c.scorecards||[]).find(x=>x.id===scId); if(!s) return;
+  const v=prompt('ชื่อผู้สัมภาษณ์ (Interviewer):', s.interviewer||'');
+  if(v==null) return;
+  const name=v.trim(); if(!name){ alert('กรุณากรอกชื่อผู้สัมภาษณ์'); return; }
+  s.interviewer=name; c.updatedAt=Date.now();
+  saveData(); openDetail(candId);
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='scoreModal') clearInterval(scTimerInt);
+}
+document.querySelectorAll('.modal-overlay').forEach(o=> o.addEventListener('click', e=>{ if(e.target===o){ o.classList.remove('open'); if(o.id==='scoreModal') clearInterval(scTimerInt); } }));
+
+/* ================= Import / Export ================= */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({app:'internal-cdd-pools',version:2,exportedAt:Date.now(),candidates},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='cdd-pools-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+function importJSON(){ document.getElementById('importFile').click(); }
+document.getElementById('importFile').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      const arr=Array.isArray(data)?data:data.candidates;
+      if(!Array.isArray(arr)) throw new Error('Invalid file format');
+      let added=0, merged=0;
+      arr.forEach(inc=>{
+        const ex=candidates.find(c=>c.id===inc.id);
+        if(!ex){ candidates.push(inc); added++; }
+        else{
+          (inc.scorecards||[]).forEach(s=>{
+            ex.scorecards=ex.scorecards||[];
+            if(!ex.scorecards.some(x=>x.id===s.id)) ex.scorecards.push(s);
+          });
+          if((inc.updatedAt||0)>(ex.updatedAt||0)){
+            const keep=ex.scorecards; Object.assign(ex,inc); ex.scorecards=keep;
+          }
+          merged++;
+        }
+      });
+      saveData(); rerenderCurrent();
+      alert(`Import complete — ${added} added, ${merged} merged`);
+    }catch(err){ alert('Import failed: '+err.message); }
+    e.target.value='';
+  };
+  reader.readAsText(f);
+});
+
+function exportCSV(){
+  const head=['Candidate','Position','Team','Stage','Interviewer','Round','Date',
+    ...CRITERIA.map(cr=>`${cr.name} (${pct(cr.weight)})`),
+    'Weighted Total','Level','Recommendation','Overnight','OT','Strengths','Focused Area'];
+  const rows=[head];
+  candidates.forEach(c=>{
+    if(!(c.scorecards||[]).length){
+      rows.push([c.name,c.position,c.dept||'',stageLabel(c.stage),'','','',...CRITERIA.map(()=>''),'','','','','','','']);
+      return;
+    }
+    c.scorecards.forEach(s=>{
+      const ov=scorecardOverall(s); const vd=verdictOf(ov);
+      rows.push([
+        c.name,c.position,c.dept||'',stageLabel(c.stage),s.interviewer,s.round||'',fmtDate(s.date),
+        ...CRITERIA.map(cr=>s.sections?.[cr.key]?.score??''),
+        ov==null?'':ov.toFixed(2), vd?vd.level:'', vd?vd.rec:'',
+        s.night==null?'':(s.night?'Yes':'No'), s.ot==null?'':(s.ot?'Yes':'No'),
+        s.strength||s.comment||'', s.focus||'',
+      ]);
+    });
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='cdd-pools-scores-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+
+/* ================= Theme ================= */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeIcon').className='ti '+(t==='dark'?'ti-sun':'ti-moon');
+  document.getElementById('themeLabel').textContent=t==='dark'?'Light mode':'Dark mode';
+  try{ localStorage.setItem('cdd-theme',t); }catch(e){}
+}
+let savedTheme='light'; try{ savedTheme=localStorage.getItem('cdd-theme')||'light'; }catch(e){}
+applyTheme(savedTheme);
+document.getElementById('themeToggle').onclick=()=> applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+
+/* ================= Auth gate (Firebase Google Sign-in) ================= */
+function showGate(show){
+  document.getElementById('loginGate').style.display = show ? 'flex' : 'none';
+  document.querySelector('.app').style.display = show ? 'none' : 'flex';
+}
+function showAuthError(msg){ const e=document.getElementById('lgError'); e.textContent=msg; e.style.display='block'; }
+function displayName(){
+  try{ const c=(localStorage.getItem('thoth_displayname')||'').trim(); if(c) return c; }catch(e){}
+  if(auth && auth.currentUser) return auth.currentUser.displayName || auth.currentUser.email || '';
+  return '';
+}
+function setDisplayName(){
+  const v=prompt('ตั้งชื่อที่จะแสดง (Display name):', displayName());
+  if(v==null) return;
+  try{ localStorage.setItem('thoth_displayname', v.trim()); }catch(e){}
+  updateUserBox();
+}
+function updateUserBox(){ const el=document.getElementById('userEmail'); const n=displayName(); if(el){ el.textContent=n; el.title=n; } }
+function recordAccess(user){
+  if(!ACCESS_COL || !user) return;
+  ACCESS_COL.add({ email:user.email||'', name:user.displayName||'', uid:user.uid||'', ts:Date.now(), ua:(navigator.userAgent||'').slice(0,180) })
+    .catch(e=>console.error('access log failed', e));
+}
+function signInGoogle(){
+  if(!auth){ showAuthError('ระบบยืนยันตัวตนยังไม่พร้อม (เชื่อมต่อ Firebase ไม่ได้)'); return; }
+  document.getElementById('lgError').style.display='none';
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err=>{
+    if(err && err.code==='auth/popup-blocked'){ auth.signInWithRedirect(provider); return; }
+    if(err && err.code==='auth/popup-closed-by-user') return;
+    if(err && err.code==='auth/operation-not-allowed'){ showAuthError('ยังไม่ได้เปิด Google Sign-in ใน Firebase Console'); return; }
+    if(err && err.code==='auth/unauthorized-domain'){ showAuthError('โดเมนนี้ยังไม่ได้เพิ่มใน Authorized domains ของ Firebase'); return; }
+    showAuthError('เข้าสู่ระบบไม่สำเร็จ: '+(err&&err.message?err.message:'unknown'));
+  });
+}
+function logout(){ if(auth) auth.signOut(); }
+document.getElementById('lgGoogle').onclick=signInGoogle;
+
+if(auth){
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      updateUserBox();
+      showGate(false);
+      try{
+        if(!sessionStorage.getItem('access_logged')){ recordAccess(user); sessionStorage.setItem('access_logged','1'); }
+      }catch(e){ recordAccess(user); }
+    }else{
+      try{ sessionStorage.removeItem('access_logged'); }catch(e){}
+      showGate(true);
+    }
+  });
+}else{
+  showAuthError('เชื่อมต่อ Firebase ไม่ได้ — ต้องออนไลน์จึงจะเข้าสู่ระบบได้');
+  showGate(true);
+}
+
+/* ================= Init ================= */
+showView('dashboard');
+</script>
+</body>
+</html>
