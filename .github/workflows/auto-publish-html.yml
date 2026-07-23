@@ -1,0 +1,74 @@
+name: Auto-publish HTML
+
+# Whenever you upload / push any .html file to the repo, this workflow
+# automatically turns the newest uploaded file into index.html (the live
+# page) and deletes any leftover / duplicate .html files. You just drag a
+# file onto GitHub — no renaming or cleanup needed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.html"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-publish-html
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Skip the runs triggered by this workflow's own auto-commit,
+    # otherwise it would loop forever.
+    if: "!contains(github.event.head_commit.message, '[auto-html]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Publish newest uploaded HTML as index.html
+        run: |
+          set -euo pipefail
+          git config core.quotePath false
+
+          # HTML files added or modified in the push that just happened,
+          # excluding index.html itself.
+          mapfile -t changed < <(
+            git diff --name-only --diff-filter=AM HEAD~1 HEAD -- '*.html' \
+              | grep -vx 'index.html' || true
+          )
+
+          newest=""
+          if [ "${#changed[@]}" -gt 0 ]; then
+            # If several were uploaded at once, the last one alphabetically wins.
+            newest="${changed[-1]}"
+          fi
+
+          if [ -n "$newest" ] && [ -f "$newest" ]; then
+            echo "Publishing '$newest' as index.html"
+            cp "$newest" index.html
+          else
+            echo "No newly uploaded HTML found; keeping current index.html"
+          fi
+
+          # Keep only index.html; remove every other stray .html in the repo root.
+          find . -maxdepth 1 -type f -name '*.html' ! -name 'index.html' -print -delete
+
+      - name: Commit and push the tidy result
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "Nothing changed — repo already tidy."
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "Auto-publish latest HTML as index.html [auto-html]"
+          git push
